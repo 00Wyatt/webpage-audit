@@ -1,0 +1,17 @@
+{
+	"manifest_version": 3,
+	"name": "Webpage Audit",
+	"version": "1.0",
+	"description": "Scans a webpage for SEO errors including invalid links.",
+	"action": {
+		"default_popup": "popup.html",
+		"default_title": "Webpage Auditor"
+	},
+	"permissions": ["activeTab"],
+	"content_scripts": [
+		{
+			"matches": ["<all_urls>"],
+			"js": ["scripts/content.js"]
+		}
+	]
+}
