@@ -1,7 +1,11 @@
 function findInvalidLinks() {
 	const links = document.querySelectorAll("a");
 	const invalidLinks = [];
-	const classesToIgnore = ["premium-menu-link-parent", "has-submenu"];
+	const classesToIgnore = [
+		"premium-menu-link-parent",
+		"has-submenu",
+		"ab-item",
+	];
 
 	links.forEach((link) => {
 		const href = link.getAttribute("href");
@@ -28,6 +32,21 @@ function findInvalidLinks() {
 	return invalidLinks;
 }
 
+function findHeadings() {
+	const headings = document.querySelectorAll("h1,h2,h3,h4,h5,h6");
+	const headingsList = [];
+
+	headings.forEach((heading) => {
+		headingsList.push({
+			tag: heading.tagName,
+			text: heading.textContent.trim(),
+			element: heading,
+		});
+	});
+
+	return headingsList;
+}
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 	if (message.action === "scanLinks") {
 		const invalidLinks = findInvalidLinks();
@@ -42,6 +61,24 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 		linkToScroll.style.backgroundColor = "yellow";
 		setTimeout(() => {
 			linkToScroll.style.backgroundColor = "";
+		}, 2000);
+	}
+});
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+	if (message.action === "scanHeadings") {
+		const headings = findHeadings();
+		sendResponse({ headings });
+	}
+	if (message.action === "scrollToHeading") {
+		const headings = findHeadings();
+		const headingToScroll = headings[message.index].element;
+
+		headingToScroll.scrollIntoView({ behavior: "smooth", block: "center" });
+
+		headingToScroll.style.color = "yellow";
+		setTimeout(() => {
+			headingToScroll.style.color = "";
 		}, 2000);
 	}
 });
