@@ -1,81 +1,68 @@
-function findInvalidLinks() {
-	const links = document.querySelectorAll("a");
-	const invalidLinks = [];
-	const classesToIgnore = [
-		"premium-menu-link-parent",
-		"has-submenu",
-		"ab-item",
-	];
+function findElements(selector, ignoredClasses = [], validateFn = () => true) {
+	const elements = document.querySelectorAll(selector);
+	const result = [];
 
-	links.forEach((link) => {
-		const href = link.getAttribute("href");
-
-		// Check if the link has any class that should be ignored
-		const shouldIgnore = classesToIgnore.some((className) =>
-			link.classList.contains(className)
+	elements.forEach((element) => {
+		const shouldIgnore = ignoredClasses.some((className) =>
+			element.classList.contains(className)
 		);
 
 		if (shouldIgnore) {
 			return;
 		}
 
-		// Check if the href is invalid
-		if (!href || href === "#") {
-			invalidLinks.push({
-				text: link.textContent.trim(),
-				href: href || "Missing href",
-				element: link,
+		if (validateFn(element)) {
+			result.push({
+				tag: element.tagName,
+				text: element.textContent.trim(),
+				href: element.getAttribute("href") || null,
+				element,
 			});
 		}
 	});
 
-	return invalidLinks;
-}
-
-function findHeadings() {
-	const headings = document.querySelectorAll("h1,h2,h3,h4,h5,h6");
-	const headingsList = [];
-
-	headings.forEach((heading) => {
-		headingsList.push({
-			tag: heading.tagName,
-			text: heading.textContent.trim(),
-			element: heading,
-		});
-	});
-
-	return headingsList;
+	return result;
 }
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+	linkParams = [
+		"a",
+		[
+			"premium-menu-link-parent",
+			"premium-sub-menu-link",
+			"has-submenu",
+			"ab-item",
+		],
+		(link) => !link.getAttribute("href") || link.getAttribute("href") === "#",
+	];
+	headingParams = "h1,h2,h3,h4,h5,h6";
+
 	if (message.action === "scanLinks") {
-		const invalidLinks = findInvalidLinks();
+		const invalidLinks = findElements(...linkParams);
 		sendResponse({ invalidLinks });
 	}
+
+	if (message.action === "scanHeadings") {
+		const headings = findElements(headingParams);
+		sendResponse({ headings });
+	}
+
 	if (message.action === "scrollToLink") {
-		const invalidLinks = findInvalidLinks();
+		const invalidLinks = findElements(...linkParams);
 		const linkToScroll = invalidLinks[message.index].element;
 
 		linkToScroll.scrollIntoView({ behavior: "smooth", block: "center" });
-
 		linkToScroll.style.backgroundColor = "yellow";
 		setTimeout(() => {
 			linkToScroll.style.backgroundColor = "";
 		}, 2000);
 	}
-});
 
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-	if (message.action === "scanHeadings") {
-		const headings = findHeadings();
-		sendResponse({ headings });
-	}
 	if (message.action === "scrollToHeading") {
-		const headings = findHeadings();
+		const headings = findElements(headingParams);
 		const headingToScroll = headings[message.index].element;
 
 		headingToScroll.scrollIntoView({ behavior: "smooth", block: "center" });
-
 		headingToScroll.style.color = "yellow";
 		setTimeout(() => {
 			headingToScroll.style.color = "";

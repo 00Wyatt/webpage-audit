@@ -34,19 +34,19 @@ body {
 .content li strong {
 	display: inline-block;
 }
-.H2 {
+.h2 {
 	padding-left: 10px;
 }
-.H3 {
+.h3 {
 	padding-left: 20px;
 }
-.H4 {
+.h4 {
 	padding-left: 30px;
 }
-.H5 {
+.h5 {
 	padding-left: 40px;
 }
-.H6 {
+.h6 {
 	padding-left: 50px;
 }
 /* button {
