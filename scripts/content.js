@@ -1,9 +1,16 @@
 function findElements(selector, ignoredClasses = [], validateFn = () => true) {
-	const elements = document.querySelectorAll(selector);
+	let elements = Array.from(document.querySelectorAll(selector));
+	if (selector === "img") {
+		elements = elements.filter(
+			img =>
+				!img.hasAttribute("alt") ||
+				img.getAttribute("alt").trim() === ""
+		);
+	}
 	const result = [];
 
-	elements.forEach((element) => {
-		const shouldIgnore = ignoredClasses.some((className) =>
+	elements.forEach(element => {
+		const shouldIgnore = ignoredClasses.some(className =>
 			element.classList.contains(className)
 		);
 
@@ -14,8 +21,8 @@ function findElements(selector, ignoredClasses = [], validateFn = () => true) {
 		if (validateFn(element)) {
 			result.push({
 				tag: element.tagName,
-				text: element.textContent.trim(),
-				href: element.getAttribute("href") || null,
+				text: element.textContent.trim() || null,
+				href: element.getAttribute("href") || element.src || null,
 				element,
 			});
 		}
@@ -33,7 +40,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 			"has-submenu",
 			"ab-item",
 		],
-		(link) => !link.getAttribute("href") || link.getAttribute("href") === "#",
+		link => !link.getAttribute("href") || link.getAttribute("href") === "#",
 	];
 	headingParams = "h1,h2,h3,h4,h5,h6";
 
@@ -45,6 +52,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 	if (message.action === "scanHeadings") {
 		const headings = findElements(headingParams);
 		sendResponse({ headings });
+	}
+
+	if (message.action === "scanImages") {
+		const images = findElements("img");
+		sendResponse({ images });
 	}
 
 	if (message.action === "scrollToLink") {
@@ -66,6 +78,17 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 		headingToScroll.style.color = "yellow";
 		setTimeout(() => {
 			headingToScroll.style.color = "";
+		}, 2000);
+	}
+
+	if (message.action === "scrollToImage") {
+		const images = findElements("img");
+		const imageToScroll = images[message.index].element;
+
+		imageToScroll.scrollIntoView({ behavior: "smooth", block: "center" });
+		imageToScroll.style.filter = "drop-shadow(0 0 16px yellow)";
+		setTimeout(() => {
+			imageToScroll.style.filter = "";
 		}, 2000);
 	}
 });

@@ -9,6 +9,12 @@ function displayResults(results, containerId, scrollAction, tabs) {
 				li.innerHTML = `${index + 1}. Text: "<strong>${
 					result.text
 				}</strong>", Href: "${result.href ?? ""}"`;
+			} else if (result.tag === "IMG") {
+				li.innerHTML = `Missing alt: <strong>${result.href.substring(
+					result.href.lastIndexOf("/") + 1
+				)}</strong> <a href="${result.href}" target="_blank">${
+					result.href
+				}</a>`;
 			} else {
 				li.classList.add(result.tag.toLowerCase());
 				li.innerHTML = `<strong>${result.tag}:</strong> "${result.text}"`;
@@ -30,24 +36,41 @@ function displayResults(results, containerId, scrollAction, tabs) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-	chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-		chrome.tabs.sendMessage(tabs[0].id, { action: "scanLinks" }, (response) => {
-			displayResults(
-				response.invalidLinks,
-				"linkResults",
-				"scrollToLink",
-				tabs
-			);
-		});
+	chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
+		chrome.tabs.sendMessage(
+			tabs[0].id,
+			{ action: "scanLinks" },
+			response => {
+				displayResults(
+					response.invalidLinks,
+					"linkResults",
+					"scrollToLink",
+					tabs
+				);
+			}
+		);
 
 		chrome.tabs.sendMessage(
 			tabs[0].id,
 			{ action: "scanHeadings" },
-			(response) => {
+			response => {
 				displayResults(
 					response.headings,
 					"headingResults",
 					"scrollToHeading",
+					tabs
+				);
+			}
+		);
+
+		chrome.tabs.sendMessage(
+			tabs[0].id,
+			{ action: "scanImages" },
+			response => {
+				displayResults(
+					response.images,
+					"imageResults",
+					"scrollToImage",
 					tabs
 				);
 			}
